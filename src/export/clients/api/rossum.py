@@ -1,6 +1,5 @@
-import requests
 import time
-from requests import Response
+from aiohttp import ClientSession, ClientResponse
 
 
 class ApiClient:
@@ -23,51 +22,55 @@ class ApiClient:
         self.api_base = self.API_BASE.format(custom_domain=self.custom_domain)
         self.token = None
         self.exp_time = None
+        self.client_session = None
 
-    def __get_auth_token(self) -> str:
+    def set_client_session(self, client_session: ClientSession):
+        self.client_session = client_session
+
+    async def __get_auth_token(self) -> str:
         if self.exp_time is None or (
             self.exp_time is not None and time.time() > self.exp_time
         ):
-            resp: Response = requests.post(
+            async with self.client_session.post(
                 url=f"{self.api_base}/{self.API_VER}/{self.AUTH_ENDPOINT}",
                 json={
                     "username": self.username,
                     "password": self.password,
                 },
-            )
-            resp.raise_for_status()
+            ) as resp:
+                resp.raise_for_status()
 
-            self.token = resp.json().get("key", None)
+                json = await resp.json()
+                self.token = json.get("key", None)
 
-            if self.token is None:
-                raise Exception("Token is empty")
-            self.exp_time = time.time() + (162 * 3600)
+                if self.token is None:
+                    raise Exception("Token is empty")
+                self.exp_time = time.time() + (162 * 3600)
         return self.token
 
-    def get_annotations(self) -> dict:
-        auth_token = self.__get_auth_token()
-        resp: Response = requests.get(
+    async def get_annotations(self) -> dict:
+        auth_token = await self.__get_auth_token()
+        async with self.client_session.post(
             url=f"{self.api_base}/{self.API_VER}/{self.ANNOTATIONS_ENDPOINT}",
             headers={"Authorization": f"Bearer {auth_token}"},
-        )
-        return resp.json()
+        ) as resp:
+            resp.raise_for_status()
+            return await resp.json()
 
-    def queue_export(
+    async def queue_export(
         self,
         queue_id: int,
         annotation_id: int,
         format: str = "xml",
     ) -> bytes:
-        auth_token = self.__get_auth_token()
+        auth_token = await self.__get_auth_token()
 
-        resp: Response = requests.get(
+        async with self.client_session.get(
             url=(
                 f"{self.api_base}/{self.API_VER}/"
                 f"{self.QUEUES_EXPORT_ENDPOINT.format(queue_id=queue_id)}"
             ),
             params={"format": format, "id": str(annotation_id)},
             headers={"Authorization": f"Bearer {auth_token}"},
-        )
-
-        # TODO  handle not found
-        return resp.content
+        ) as resp:
+            return await resp.read()

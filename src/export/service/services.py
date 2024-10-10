@@ -1,15 +1,11 @@
-import re
-import io
-import xml.etree.ElementTree as ET
 import base64
-from datetime import datetime
 from export.settings import settings
 from export.clients.api.rossum import ApiClient as RossumApiClient
 from export.clients.api.postbin import ApiClient as PostBinClient
 from export.service.transformer import XMLTransformer
 
 import requests  # TO change
-
+import aiohttp
 
 rossum_api = RossumApiClient(
     username=settings.rossum_api_email,
@@ -21,25 +17,21 @@ rossum_api = RossumApiClient(
 postbin_api = PostBinClient()
 
 
-def post_transformed_annotation(queue_id, annotation_id):
+async def post_transformed_annotation(queue_id, annotation_id):
+    async with aiohttp.ClientSession() as session:
+        rossum_api.set_client_session(session)
+        postbin_api.set_client_session(session)
 
-    # Get the source XML
+        # Get source XML
+        source_xml = await rossum_api.queue_export(queue_id, annotation_id)
 
-    source_xml = rossum_api.queue_export(queue_id, annotation_id)
+        # Transform the source XML to the target format
+        target_xml = XMLTransformer(source_xml).transform()
+        target_xml_b64 = base64.b64encode(target_xml).decode("utf-8")
 
-    # Transform the source XML to the target format
-    target_xml = XMLTransformer(source_xml).transform()
-    target_xml_b64 = base64.b64encode(target_xml).decode("utf-8")
+        # Post target XML to the Postbin
+        req_id_url = await postbin_api.post_data(
+            method="POST", json={"content": target_xml_b64}
+        )
 
-    # Post target XML to the Postbin
-    req_id_url = postbin_api.post_data(
-        requests, method="POST", json={"content": target_xml_b64}
-    )
-
-    return req_id_url
-
-
-def transform_annotation(queue_id, annotation_id):
-    source_xml = rossum_api.queue_export(queue_id, annotation_id)
-    target_xml = XMLTransformer(source_xml)
-    return target_xml.transform()
+        return req_id_url

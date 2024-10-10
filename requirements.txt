@@ -3,5 +3,6 @@ fastapi[standart]
 uvicorn
 pydantic-settings
 email-validator
+aiohttp
 requests
 pytest
