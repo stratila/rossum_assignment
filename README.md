@@ -25,17 +25,17 @@ pytest tests
 
 API:
 
-`GET /exports`
+`GET /export`
 
-Params: `queue_id` - int - required
-Params: `annotation_id` - int- required
+Param: `queue_id` - int - required
+Param: `annotation_id` - int- required
 
 
 
 ```
 Annotation examples:
-http://localhost:8080/test_result?queue_id=1355018&annotation_id=4379183  
-http://localhost:8080/test_result?queue_id=1355018&annotation_id=4379164
-http://localhost:8080/test_result?queue_id=1355018&annotation_id=4379179
-http://localhost:8080/test_result?queue_id=1355018&annotation_id=4379186
+http://localhost:8080/export?queue_id=1355018&annotation_id=4379183  
+http://localhost:8080/export?queue_id=1355018&annotation_id=4379164
+http://localhost:8080/export?queue_id=1355018&annotation_id=4379179
+http://localhost:8080/export?queue_id=1355018&annotation_id=4379186
 ```
