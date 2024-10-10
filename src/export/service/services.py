@@ -23,17 +23,20 @@ postbin_api = PostBinClient()
 
 def post_transformed_annotation(queue_id, annotation_id):
 
-    # API CALL 1
+    # Get the source XML
+
     source_xml = rossum_api.queue_export(queue_id, annotation_id)
+
+    # Transform the source XML to the target format
     target_xml = XMLTransformer(source_xml).transform()
     target_xml_b64 = base64.b64encode(target_xml).decode("utf-8")
 
-    # API CALL 2
-    req_id = postbin_api.post_data(
+    # Post target XML to the Postbin
+    req_id_url = postbin_api.post_data(
         requests, method="POST", json={"content": target_xml_b64}
     )
 
-    return req_id
+    return req_id_url
 
 
 def transform_annotation(queue_id, annotation_id):

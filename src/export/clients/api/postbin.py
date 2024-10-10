@@ -39,6 +39,5 @@ class ApiClient:
         req_id = resp.text.strip()
 
         req_url = f"{self.BASE_URL}/api/bin/{self.bin_data['binId']}/req/{req_id}"
-        logger.debug(f"Request url: {req_url}")
 
-        return req_id
+        return req_url
