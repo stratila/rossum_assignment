@@ -1,0 +1,7 @@
+setuptools
+fastapi[standart]
+uvicorn
+pydantic-settings
+email-validator
+requests
+pytest
