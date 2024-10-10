@@ -4,7 +4,6 @@ from export.clients.api.rossum import ApiClient as RossumApiClient
 from export.clients.api.postbin import ApiClient as PostBinClient
 from export.service.transformer import XMLTransformer
 
-import requests  # TO change
 import aiohttp
 
 rossum_api = RossumApiClient(

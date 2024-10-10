@@ -1,5 +1,5 @@
 import time
-from aiohttp import ClientSession, ClientResponse
+from aiohttp import ClientSession
 
 
 class ApiClient:
